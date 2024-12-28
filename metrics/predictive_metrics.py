@@ -64,7 +64,7 @@ def predictive_score_metrics(original_data: np.ndarray, generated_data: np.ndarr
 
     ds_train = tf.data.Dataset.from_tensor_slices((x_train, y_train)).cache().shuffle(x_train.shape[0])
 
-    #Define training step
+    #Define train step
     @tf.function
     def train_step(X, Y):
         with tf.GradientTape() as tape:
