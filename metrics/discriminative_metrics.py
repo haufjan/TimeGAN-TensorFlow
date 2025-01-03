@@ -26,11 +26,11 @@ class Discriminator(keras.Model):
         self.batch_size = batch_size
 
         self.rnn = keras.layers.GRU(units=hidden_dim)
-        self.rnn.build((seq_len, dim))
+        self.rnn.build((None, seq_len, dim))
         self.model = keras.layers.Dense(units=1, activation=None)
-        self.model.build((hidden_dim,))
+        self.model.build((None, hidden_dim))
         self.activation = keras.layers.Activation('sigmoid')
-        self.activation.build((1,))
+        self.activation.build((None, 1))
 
         self.loss_fn = keras.losses.BinaryCrossentropy(from_logits=True)
         self.optimizer = keras.optimizers.Adam(learning_rate=1e-3)
@@ -107,6 +107,6 @@ def discriminative_score_metrics(original_data: np.ndarray, generated_data: np.n
         y_label_final = np.concatenate((np.ones([len(y_pred_real,)]), np.zeros([len(y_pred_fake,)])), axis=0)
 
         acc = accuracy_score(y_label_final, (y_pred_final > 0.5))
-        discriminative_score = np.abs(0.5 - acc)
+        discriminative_score = np.abs(acc - 0.5)
 
     return discriminative_score
