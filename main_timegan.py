@@ -46,7 +46,7 @@ def main(args):
         temp_disc = discriminative_score_metrics(data_train, data_gen)
         discriminative_score.append(temp_disc)
     
-    metric_results['discriminative'] = np.mean(discriminative_score)
+    metric_results['Discriminative'] = np.mean(discriminative_score)
 
     #Predictive score
     predictive_score = []
@@ -54,9 +54,10 @@ def main(args):
         temp_pred = predictive_score_metrics(data_train, data_gen)
         predictive_score.append(temp_pred)
     
-    metric_results['predictive'] = np.mean(predictive_score)
+    metric_results['Predictive'] = np.mean(predictive_score)
 
-    print(metric_results)
+    for metric, result in metric_results.items():
+        print(f'{metric} Score: {result}')
 
     #Visualization
     plot_distribution_estimate(*low_dimensional_representation(data_train, data_gen, 'pca'), 'pca')
