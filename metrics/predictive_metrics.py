@@ -25,9 +25,9 @@ class Predictor(keras.Model):
         self.batch_size = batch_size
 
         self.rnn = keras.layers.GRU(units=hidden_dim, return_sequences=True)
-        self.rnn.build((seq_len-1, dim))
+        self.rnn.build((None, seq_len-1, dim-1))
         self.model = keras.layers.Dense(units=1, activation='sigmoid')
-        self.model.build((seq_len-1, hidden_dim))
+        self.model.build((None, seq_len-1, hidden_dim))
 
         self.loss_fn = keras.losses.MeanAbsoluteError()
         self.optimizer = keras.optimizers.Adam(learning_rate=1e-3)
@@ -85,7 +85,7 @@ def predictive_score_metrics(original_data: np.ndarray, generated_data: np.ndarr
     x_test = original_data[:,:-1,:(model.dim-1)]
     y_test = np.reshape(original_data[:,1:,(model.dim-1)], (original_data.shape[0], original_data.shape[1]-1, 1))
 
-    ds_test = tf.data.Dataset.from_tensor_slices((y_test, y_test)).cache().shuffle(x_test.shape[0])
+    ds_test = tf.data.Dataset.from_tensor_slices((x_test, y_test)).cache().shuffle(x_test.shape[0])
 
     @tf.function
     def test_step(X):
