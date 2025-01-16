@@ -1,13 +1,11 @@
 # TimeGAN-TensorFlow
-Unofficial implementation of TimeGAN (Yoon et al., NIPS 2019) in TensorFlow.
+Unofficial implementation of TimeGAN (Yoon et al., NIPS 2019) in TensorFlow 2.
 
 Jinsung Yoon, Daniel Jarrett, Mihaela van der Schaar, 
 "Time-series Generative Adversarial Networks," 
 Neural Information Processing Systems (NeurIPS), 2019
-  
-https://papers.nips.cc/paper/8789-time-series-generative-adversarial-networks
 
-Original TimeGAN codebase: https://github.com/jsyoon0823/TimeGAN.git
+Original Codebase: https://github.com/jsyoon0823/TimeGAN.git
 
 ### Data Set Reference
 -  Stock data: https://finance.yahoo.com/quote/GOOG/history?p=GOOG
