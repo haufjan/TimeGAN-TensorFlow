@@ -10,3 +10,14 @@ Original Codebase: https://github.com/jsyoon0823/TimeGAN.git
 ### Data Set Reference
 -  Stock data: https://finance.yahoo.com/quote/GOOG/history?p=GOOG
 -  Energy data: http://archive.ics.uci.edu/ml/datasets/Appliances+energy+prediction
+
+### Results
+
+#### Stock Data
+
+**Visualization**
+
+<p float="left">
+  <img src="../assets/pca.png" alt="PCA plot" width="400" />
+  <img src="../assets/tsne.png" alt="TSNE plot" width="400" />
+</p>
