@@ -154,12 +154,10 @@ def supervised_loss(h, h_hat_supervise):
     return keras.losses.MeanSquaredError()(h[:,1:,:], h_hat_supervise[:,:-1,:])
 
 @tf.function
-def generator_loss(y_fake, y_fake_e, h, h_hat_supervise, x, x_hat):
+def generator_loss(y_fake, y_fake_e, h, h_hat_supervise, x, x_hat, gamma: int = 1):
     """
     Compute combined generator loss from multiple loss measures.
     """
-    gamma = 1
-
     fake = tf.ones_like(y_fake, dtype=tf.float32)
 
     # 1. Unsupervised generator loss
@@ -170,19 +168,17 @@ def generator_loss(y_fake, y_fake_e, h, h_hat_supervise, x, x_hat):
     g_loss_s = keras.losses.MeanSquaredError()(h[:,1:,:], h_hat_supervise[:,:-1,:])
 
     # 3. Two moments
-    g_loss_v1 = tf.math.reduce_mean(tf.math.abs(tf.math.sqrt(tf.math.reduce_std(x_hat, axis=0) + 1e-6) - tf.math.sqrt(tf.math.reduce_std(x, axis=0) + 1e-6)), axis=0)
-    g_loss_v2 = tf.math.reduce_mean(tf.math.abs(tf.math.reduce_mean(x_hat, axis=0) - tf.math.reduce_mean(x, axis=0)), axis=0)
+    g_loss_v1 = tf.math.reduce_mean(tf.math.abs(tf.math.sqrt(tf.math.reduce_std(x_hat, axis=0) + 1e-6) - tf.math.sqrt(tf.math.reduce_std(x, axis=0) + 1e-6)))
+    g_loss_v2 = tf.math.reduce_mean(tf.math.abs(tf.math.reduce_mean(x_hat, axis=0) - tf.math.reduce_mean(x, axis=0)))
     g_loss_v = g_loss_v1 + g_loss_v2
 
     return g_loss_u + gamma*g_loss_u_e + 100*tf.math.sqrt(g_loss_s) + 100*g_loss_v
 
 @tf.function
-def discriminator_loss(y_real, y_fake, y_fake_e):
+def discriminator_loss(y_real, y_fake, y_fake_e, gamma: int = 1):
     """
     Compute unsupervised discriminator loss.
     """
-    gamma = 1
-
     fake = tf.zeros_like(y_fake, dtype=tf.float32)
     valid = tf.ones_like(y_real, dtype=tf.float32)
 
