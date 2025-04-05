@@ -8,22 +8,20 @@ from metrics.predictive_metrics import predictive_score_metrics
 from metrics.visualization_metrics import low_dimensional_representation, plot_distribution_estimate
 from utils import preprocessing
 
-
-
 def main(args):
-    """Main function"""
-    #Check available device
+    """Main function."""
+    # Check available device
     if tf.config.list_physical_devices('GPU'):
         print(tf.config.list_physical_devices('GPU'))
         tf.config.set_soft_device_placement(True)
 
-    #Load data from file
+    # Load data from file
     data = load_dataset(args.data)
 
-    #Preprocessing
+    # Preprocessing
     data_train, max_val, min_val = preprocessing((data, True), sequence_length=args.seq_len)
 
-    #Instantiate TimeGAN model
+    # Create TimeGAN model instance
     model = TimeGAN(input_dim=data_train.shape[-1],
                     hidden_dim=args.hidden_dim,
                     num_layers=args.num_layers,
@@ -31,16 +29,16 @@ def main(args):
                     batch_size=args.batch_size,
                     learning_rate=args.learning_rate)
 
-    #Start training
+    # Start training
     model.fit(data_train)
 
-    #Synthesize sequences
+    # Synthesize sequences
     data_gen = model.transform(data_train.shape)
 
-    #Evaluation section
+    # Evaluation section
     metric_results = {}
 
-    #Discriminative score
+    # Discriminative score
     discriminative_score = []
     for _ in range(args.metric_iteration):
         temp_disc = discriminative_score_metrics(data_train, data_gen)
@@ -48,7 +46,7 @@ def main(args):
     
     metric_results['Discriminative'] = np.mean(discriminative_score)
 
-    #Predictive score
+    # Predictive score
     predictive_score = []
     for _ in range(args.metric_iteration):
         temp_pred = predictive_score_metrics(data_train, data_gen)
@@ -59,7 +57,7 @@ def main(args):
     for metric, result in metric_results.items():
         print(f'{metric} Score: {result}')
 
-    #Visualization
+    # Visualization
     plot_distribution_estimate(*low_dimensional_representation(data_train, data_gen, 'pca'), 'pca')
     plot_distribution_estimate(*low_dimensional_representation(data_train, data_gen, 'tsne'), 'tsne')
 
@@ -124,5 +122,5 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    #Main function call
+    # Main function call
     data_train, data_gen, metrics = main(args)
