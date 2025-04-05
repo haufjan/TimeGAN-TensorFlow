@@ -81,9 +81,9 @@ def discriminative_score_metrics(original_data: np.ndarray, generated_data: np.n
             y_logit_fake, _ = model(x_hat)
 
             d_loss_real = tf.math.reduce_mean(model.loss_fn(tf.ones_like(y_logit_real, dtype=tf.float32),
-                                                            y_logit_real), axis=0)
+                                                            y_logit_real))
             d_loss_fake = tf.math.reduce_mean(model.loss_fn(tf.zeros_like(y_logit_fake, dtype=tf.float32),
-                                                            y_logit_fake), axis=0)
+                                                            y_logit_fake))
             d_loss = d_loss_real + d_loss_fake
         
         grad = tape.gradient(d_loss, model.trainable_variables)
