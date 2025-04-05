@@ -22,17 +22,17 @@ def low_dimensional_representation(data_ori: np.ndarray, data_gen: np.ndarray, t
 
     if technique == 'pca':
         # PCA Analysis
-        pca = PCA(n_components = 2)
+        pca = PCA(n_components=2)
         pca.fit(prep_data)
 
         return pca.transform(prep_data), pca.transform(prep_data_hat)
 
     elif technique == 'tsne':
         # Do t-SNE Analysis together
-        prep_data_final = np.concatenate((prep_data, prep_data_hat), axis = 0)
+        prep_data_final = np.concatenate((prep_data, prep_data_hat), axis=0)
 
         # TSNE anlaysis
-        tsne = TSNE(n_components = 2, verbose = 1, perplexity = 40, max_iter = 300)
+        tsne = TSNE(n_components=2, verbose=1, perplexity=40, max_iter=300)
         tsne_result = tsne.fit_transform(prep_data_final)
 
         return tsne_result[:sample_no], tsne_result[sample_no:]
