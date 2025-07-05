@@ -1,6 +1,7 @@
 import argparse
 import numpy as np
 import tensorflow as tf
+import matplotlib.pyplot as plt
 from data_loading import load_dataset
 from timegan import TimeGAN
 from metrics.discriminative_metrics import discriminative_score_metrics
@@ -9,7 +10,6 @@ from metrics.visualization_metrics import low_dimensional_representation, plot_d
 from utils import preprocessing
 
 def main(args):
-    """Main function."""
     # Check available device
     if tf.config.list_physical_devices('GPU'):
         print(tf.config.list_physical_devices('GPU'))
@@ -19,7 +19,7 @@ def main(args):
     data = load_dataset(args.data)
 
     # Preprocessing
-    data_train, max_val, min_val = preprocessing((data, True), sequence_length=args.seq_len)
+    data_train, max_val, min_val = preprocessing(data, sequence_length=args.seq_len)
 
     # Create TimeGAN model instance
     model = TimeGAN(input_dim=data_train.shape[-1],
@@ -60,6 +60,7 @@ def main(args):
     # Visualization
     plot_distribution_estimate(*low_dimensional_representation(data_train, data_gen, 'pca'), 'pca')
     plot_distribution_estimate(*low_dimensional_representation(data_train, data_gen, 'tsne'), 'tsne')
+    plt.show()
 
     return data_train, data_gen, metric_results
 
@@ -119,8 +120,7 @@ if __name__ == '__main__':
         default=1e-3,
         type=float
     )
-
     args = parser.parse_args()
 
     # Main function call
-    data_train, data_gen, metrics = main(args)
+    real_data, generated_date, computed_metrics = main(args)

@@ -7,7 +7,7 @@ import keras
 class Embedder(keras.Sequential):
     def __init__(self, module_name, input_dim, hidden_dim, num_layers):
         super().__init__(name='Embedder')
-        assert module_name in ['gru', 'lstm']
+
         # Attributes
         self.module_name = module_name
         self.input_dim = input_dim
@@ -21,6 +21,8 @@ class Embedder(keras.Sequential):
                 self.add(keras.layers.GRU(units=hidden_dim, return_sequences=True))
             elif module_name == 'lstm':
                 self.add(keras.layers.LSTM(units=hidden_dim, return_sequences=True))
+            else:
+                raise ValueError(f"Invalid module name {module_name}. Choose 'gru' or 'lstm'.")
         self.add(keras.layers.Dense(units=hidden_dim, activation='sigmoid'))
 
     def build(self, sequence_length: int):
@@ -33,7 +35,7 @@ class Embedder(keras.Sequential):
 class Recovery(keras.Sequential):
     def __init__(self, module_name, input_dim, hidden_dim, num_layers):
         super().__init__(name='Recovery')
-        assert module_name in ['gru', 'lstm']
+
         # Attributes
         self.module_name = module_name
         self.input_dim = input_dim
@@ -47,6 +49,8 @@ class Recovery(keras.Sequential):
                 self.add(keras.layers.GRU(units=hidden_dim, return_sequences=True))
             elif module_name == 'lstm':
                 self.add(keras.layers.LSTM(units=hidden_dim, return_sequences=True))
+            else:
+                raise ValueError(f"Invalid module name {module_name}. Choose 'gru' or 'lstm'.")
         self.add(keras.layers.Dense(units=input_dim, activation='sigmoid'))
 
     def build(self, sequence_length: int):
@@ -59,7 +63,7 @@ class Recovery(keras.Sequential):
 class Generator(keras.Sequential):
     def __init__(self, module_name, input_dim, hidden_dim, num_layers):
         super().__init__(name='Generator')
-        assert module_name in ['gru', 'lstm']
+
         # Attributes
         self.module_name = module_name
         self.input_dim = input_dim
@@ -73,6 +77,8 @@ class Generator(keras.Sequential):
                 self.add(keras.layers.GRU(units=hidden_dim, return_sequences=True))
             elif module_name == 'lstm':
                 self.add(keras.layers.LSTM(units=hidden_dim, return_sequences=True))
+            else:
+                raise ValueError(f"Invalid module name {module_name}. Choose 'gru' or 'lstm'.")
         self.add(keras.layers.Dense(units=hidden_dim, activation='sigmoid'))
 
     def build(self, sequence_length: int):
@@ -85,7 +91,7 @@ class Generator(keras.Sequential):
 class Supervisor(keras.Sequential):
     def __init__(self, module_name, hidden_dim, num_layers):
         super().__init__(name='Supervisor')
-        assert module_name in ['gru', 'lstm']
+
         # Attributes
         self.module_name = module_name
         self.hidden_dim = hidden_dim
@@ -98,6 +104,8 @@ class Supervisor(keras.Sequential):
                 self.add(keras.layers.GRU(units=hidden_dim, return_sequences=True))
             elif module_name == 'lstm':
                 self.add(keras.layers.LSTM(units=hidden_dim, return_sequences=True))
+            else:
+                raise ValueError(f"Invalid module name {module_name}. Choose 'gru' or 'lstm'.")
         self.add(keras.layers.Dense(units=hidden_dim, activation='sigmoid'))
 
     def build(self, sequence_length: int):
@@ -110,7 +118,7 @@ class Supervisor(keras.Sequential):
 class Discriminator(keras.Sequential):
     def __init__(self, module_name, hidden_dim, num_layers):
         super().__init__(name='Discriminator')
-        assert module_name in ['gru', 'lstm']
+
         # Attributes
         self.module_name = module_name
         self.hidden_dim = hidden_dim
@@ -129,6 +137,8 @@ class Discriminator(keras.Sequential):
                 self.add(keras.layers.Bidirectional(keras.layers.LSTM(units=hidden_dim, return_sequences=True)))
                 # Unidirectional discriminator
                 # self.add(keras.layers.LSTM(units=hidden_dim, return_sequences=True))
+            else:
+                raise ValueError(f"Invalid module name {module_name}. Choose 'gru' or 'lstm'.")
         self.add(keras.layers.Dense(units=1, activation=None))
 
     def build(self, sequence_length: int):
@@ -141,23 +151,14 @@ class Discriminator(keras.Sequential):
 # Define loss functions
 @tf.function
 def embedding_loss(x, x_tilde):
-    """
-    Compute reconstruction loss between original and recovered sequences.
-    """
     return 10*tf.math.sqrt(keras.losses.MeanSquaredError()(x, x_tilde))
 
 @tf.function
 def supervised_loss(h, h_hat_supervise):
-    """
-    Compute supervised loss by comparing one-step ahead original latent vectors with supervised original vectors.
-    """
     return keras.losses.MeanSquaredError()(h[:,1:,:], h_hat_supervise[:,:-1,:])
 
 @tf.function
 def generator_loss(y_fake, y_fake_e, h, h_hat_supervise, x, x_hat, gamma: int = 1):
-    """
-    Compute combined generator loss from multiple loss measures.
-    """
     fake = tf.ones_like(y_fake, dtype=tf.float32)
 
     # 1. Unsupervised generator loss
@@ -176,9 +177,6 @@ def generator_loss(y_fake, y_fake_e, h, h_hat_supervise, x, x_hat, gamma: int = 
 
 @tf.function
 def discriminator_loss(y_real, y_fake, y_fake_e, gamma: int = 1):
-    """
-    Compute unsupervised discriminator loss.
-    """
     fake = tf.zeros_like(y_fake, dtype=tf.float32)
     valid = tf.ones_like(y_real, dtype=tf.float32)
 
@@ -191,13 +189,27 @@ def discriminator_loss(y_real, y_fake, y_fake_e, gamma: int = 1):
 
 # Define TimeGAN
 class TimeGAN():
-    def __init__(self, module_name: str = 'gru',
+    """
+    TimeGAN model for time series generation
+    """
+    def __init__(self,
+                 module_name: str = 'gru',
                  input_dim: int = 1,
                  hidden_dim: int = 24,
                  num_layers: int = 3,
                  epochs: int = 1000,
                  batch_size: int = 128,
                  learning_rate: float = 1e-3):
+        """
+        Args:
+            module_name (str): Name of the recurrent module ('gru' or 'lstm')
+            input_features (int): Number of input features
+            hidden_dim (int): Number of hidden units
+            num_layers (int): Number of recurrent layers
+            epochs (int): Number of training epochs
+            batch_size (int): Batch size for training
+            learning_rate (float): Learning rate for optimizer
+        """
 
         # Attributes
         self.module_name = module_name
@@ -234,7 +246,7 @@ class TimeGAN():
 
     def fit(self, data_training: np.ndarray):
         """
-        TimeGAN training.
+        Train TimeGAN model in three subsequent training phases
         """
         # Track training time
         self.fitting_time = time.time()
@@ -422,7 +434,9 @@ class TimeGAN():
         print('\nElapsed Training Time:', time.strftime('%Hh %Mmin %Ss', time.gmtime(self.fitting_time)), '\n')
 
     def transform(self, shape: tuple, training: bool = False):
-        """TimeGAN sequences generation"""
+        """
+        Generate data using the trained TimeGAN model
+        """
         @tf.function
         def generate_step(z):
             e_hat = self.generator(z, training=training)

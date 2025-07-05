@@ -2,11 +2,12 @@ import numpy as np
 import tensorflow as tf
 import keras
 from sklearn.metrics import mean_absolute_error
-import tqdm
 from tqdm import tqdm
 
-# Define post-hoc predictor
 class Predictor(keras.Model):
+    """
+    Post-hoc RNN to predict the next time step of the original data
+    """
     def __init__(self,
                  seq_len: int,
                  dim: int,
@@ -40,14 +41,7 @@ class Predictor(keras.Model):
 
 def predictive_score_metrics(original_data: np.ndarray, generated_data: np.ndarray) -> float:
     """
-    Report the performance of Post-hoc RNN one-step ahead prediction.
-
-    Args:
-        - ori_data: original data
-        - generated_data: generated synthetic data
-
-    Returns:
-        - predictive_score: MAE of the predictions on the original data
+    Report the performance of Post-hoc RNN one-step ahead prediction
     """
     no, seq_len, dim = np.asarray(original_data).shape
 
@@ -63,43 +57,43 @@ def predictive_score_metrics(original_data: np.ndarray, generated_data: np.ndarr
     
     # Prepare training   
     x_train = generated_data[:,:-1,:(model.dim-1)]
-    y_train = np.reshape(generated_data[:,1:,(model.dim-1)], (generated_data.shape[0], generated_data.shape[1]-1, 1))
+    y_train = np.reshape(generated_data[:,1:,(model.dim-1)], (generated_data.shape[0],generated_data.shape[1]-1,1))
 
     ds_train = tf.data.Dataset.from_tensor_slices((x_train, y_train)).cache().shuffle(x_train.shape[0])
 
     # Define train step
     @tf.function
-    def train_step(X, Y):
+    def train_step(x, y):
         with tf.GradientTape() as tape:
-            pred_train = model(X)
+            pred_train = model(x)
         
-            loss = model.loss_fn(Y, pred_train)
+            loss = model.loss_fn(y, pred_train)
 
         grad = tape.gradient(loss, model.trainable_variables)
         model.optimizer.apply_gradients(zip(grad, model.trainable_variables))
     
     # Start training
-    for itt in tqdm(range(model.epochs)):
+    for _ in tqdm(range(model.epochs)):
         # Mini-batch training on synthetic data
-        for X, Y in ds_train.batch(model.batch_size).prefetch(tf.data.AUTOTUNE):
-            train_step(X, Y)                    
+        for x, y in ds_train.batch(model.batch_size).prefetch(tf.data.AUTOTUNE):
+            train_step(x, y)                    
 
     # Test the model on the original data      
     x_test = original_data[:,:-1,:(model.dim-1)]
-    y_test = np.reshape(original_data[:,1:,(model.dim-1)], (original_data.shape[0], original_data.shape[1]-1, 1))
+    y_test = np.reshape(original_data[:,1:,(model.dim-1)], (original_data.shape[0],original_data.shape[1]-1,1))
 
     ds_test = tf.data.Dataset.from_tensor_slices((x_test, y_test)).cache().shuffle(x_test.shape[0])
 
     @tf.function
-    def test_step(X):
-        return model(X)
+    def test_step(x):
+        return model(x)
 
     # Compute predictive score as MAE
-    MAE = 0
-    for X, Y in ds_test.batch(x_test.shape[0]).prefetch(tf.data.AUTOTUNE):
-        pred_test =  test_step(X)
+    mae = 0
+    for x, y in ds_test.batch(x_test.shape[0]).prefetch(tf.data.AUTOTUNE):
+        pred_test =  test_step(x)
 
         for i in range(len(pred_test)):
-            MAE =+ mean_absolute_error(Y[i,:,:].numpy(), pred_test[i,:,:].numpy())
+            mae += mean_absolute_error(y[i,:,:].numpy(), pred_test[i,:,:].numpy())
 
-    return MAE/no
+    return mae/no

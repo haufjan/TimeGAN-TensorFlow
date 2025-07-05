@@ -14,11 +14,11 @@ Original Codebase: https://github.com/jsyoon0823/TimeGAN.git
 ### Version Notes
 The model was implemented and tested using `Python==3.11.9`. Further, the following modules were utilized (see [Requirements File](./requirements.txt)):
 ```
-keras==3.9.2
-matplotlib==3.10.1
+keras==3.10.0
+matplotlib==3.10.3
 numpy==2.1.3
-pandas==2.2.3
-scikit-learn==1.6.1
+pandas==2.3.0
+scikit-learn==1.7.0
 tensorflow==2.19.0
 tqdm==4.67.1
 ```
@@ -27,7 +27,27 @@ tqdm==4.67.1
 
 #### Stock Data
 
-**Visualization**
+**1. Discriminative Score**
+
+```python
+# Compute discriminative score
+discriminative_score_metrics(data_train, data_gen)
+```
+100%|██████████| 2000/2000 [03:54<00:00,  8.52it/s]
+
+0.4924965893587995
+
+**2. Predictive Score**
+
+```python
+# Compute predictive score
+predictive_score_metrics(data_train, data_gen)
+```
+100%|██████████| 5000/5000 [08:38<00:00,  9.64it/s]
+    
+0.03887795482822757
+
+**3. Visualization**
 
 <p float="left">
   <img src="../assets/pca.png" alt="PCA plot" width="400" />

@@ -3,10 +3,8 @@ import tensorflow as tf
 import keras
 from sklearn.metrics import accuracy_score
 from sklearn.model_selection import train_test_split
-import tqdm
 from tqdm import tqdm
 
-#Define post-hoc discriminator
 class Discriminator(keras.Model):
     def __init__(self,
                  seq_len: int,
@@ -25,11 +23,11 @@ class Discriminator(keras.Model):
 
         # Layers
         self.rnn = keras.layers.GRU(units=hidden_dim)
-        self.rnn.build((None, seq_len, dim))
+        self.rnn.build((None,seq_len, dim))
         self.model = keras.layers.Dense(units=1, activation=None)
-        self.model.build((None, hidden_dim))
+        self.model.build((None,hidden_dim))
         self.activation = keras.layers.Activation('sigmoid')
-        self.activation.build((None, 1))
+        self.activation.build((None,1))
 
         # Loss function
         self.loss_fn = keras.losses.BinaryCrossentropy(from_logits=True)
@@ -45,16 +43,9 @@ class Discriminator(keras.Model):
 
 def discriminative_score_metrics(original_data: np.ndarray, generated_data: np.ndarray) -> float:
     """
-    Use post-hoc RNN to classify original data and synthetic data.
-
-    Args:
-        - ori_data: original data
-        - generated_data: generated synthetic data
-
-    Returns:
-        - discriminative_score: np.abs(classification accuracy - 0.5)
+    Post-hoc RNN to classify original data and synthetic data
     """
-    no, seq_len, dim = original_data.shape
+    _, seq_len, dim = original_data.shape
 
     hidden_dim = int(dim/2)
     iterations = 2000
@@ -69,9 +60,9 @@ def discriminative_score_metrics(original_data: np.ndarray, generated_data: np.n
     # Split data into train and test fractions
     x_train, x_test, x_hat_train, x_hat_test = train_test_split(original_data, generated_data, test_size=0.2)
 
-    ds_train = tf.data.Dataset.from_tensor_slices((x_train, x_hat_train)).cache().shuffle(x_train.shape[0])
+    ds_train = tf.data.Dataset.from_tensor_slices((x_train,x_hat_train)).cache().shuffle(x_train.shape[0])
 
-    ds_test = tf.data.Dataset.from_tensor_slices((x_test, x_hat_test)).cache().shuffle(x_test.shape[0])
+    ds_test = tf.data.Dataset.from_tensor_slices((x_test,x_hat_test)).cache().shuffle(x_test.shape[0])
 
     # Define train step
     @tf.function
@@ -90,7 +81,7 @@ def discriminative_score_metrics(original_data: np.ndarray, generated_data: np.n
         model.optimizer.apply_gradients(zip(grad, model.trainable_variables))
 
     # Start training
-    for itt in tqdm(range(model.epochs)):
+    for _ in tqdm(range(model.epochs)):
         # Mini-batch training
         for x, x_hat in ds_train.batch(model.batch_size).prefetch(tf.data.AUTOTUNE):
             train_step(x, x_hat)
@@ -110,6 +101,6 @@ def discriminative_score_metrics(original_data: np.ndarray, generated_data: np.n
         y_label_final = np.concatenate((np.ones([len(y_pred_real,)]), np.zeros([len(y_pred_fake,)])), axis=0)
 
         acc = accuracy_score(y_label_final, (y_pred_final > 0.5))
-        discriminative_score = np.abs(acc - 0.5)
+        discriminative_score = abs(acc - 0.5)
 
     return discriminative_score
